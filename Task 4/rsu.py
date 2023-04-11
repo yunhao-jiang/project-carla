@@ -16,7 +16,7 @@ import time
 import numpy as np
 import math
 
-NPC_VEH_NUM = 40
+NPC_VEH_NUM = 80
 actor_list = []
 vehicle_list = []
 
@@ -25,21 +25,29 @@ def destroy():
         actor.destroy()
     for cone in cone_list:
         cone.destroy()
-# def destroy_init():
-#     existed_actors = world.get_actors()
-#     for actor in existed_actors:
-#         actor.destroy()
+def destroy_init():
+    existed_actors = world.get_actors()
+    for actor in existed_actors:
+        actor.destroy()
 
 try:
     # 0. Set the cilent and the world
-    client = carla.Client('localhost', 2000) # https://carla.readthedocs.io/en/latest/core_world/#client-creation
-    client.set_timeout(2.0)
+    client = carla.Client('localhost', 2000) #
+    # https://carla.readthedocs.io/en/latest/core_world/#client-creation
+    client.set_timeout(10.0)
     world = client.get_world()
-    # destroy_init()
+    tm = client.get_trafficmanager(8000)
+    #destroy_init()
 
     # 1. Initialize the blueprint library and the spawn points
     blueprint_library = world.get_blueprint_library() # https://carla.readthedocs.io/en/latest/core_actors/#blueprints
     spawn_points = world.get_map().get_spawn_points()
+
+    veh_construction_bp = blueprint_library.find('vehicle.carlamotors.carlacola')
+    spawn_point_veh_con = carla.Transform(carla.Location(x=-53, y=61.2, z=1), carla.Rotation(yaw=90))
+    veh_construction = world.spawn_actor(veh_construction_bp, spawn_point_veh_con)
+    actor_list.append(veh_construction)
+    veh_construction_heading = 90.0
 
     # 2. Spawn the vehicles
     # Generate NPC vehicles
@@ -57,9 +65,14 @@ try:
             vehicle_list.append(vehicle_i)
     print('%d vehicles are generated' % len(actor_list))
 
+
+
     # Set autopilot for each vehicle
-    for vehicle_i in actor_list:
+    for vehicle_i in vehicle_list:
         vehicle_i.set_autopilot(True)
+        tm.distance_to_leading_vehicle(vehicle_i,5.0)
+        tm.auto_lane_change(vehicle_i, True)
+
 
     # 3. Spawn the RSU
     rsu_bp_1 = blueprint_library.find('static.prop.streetsign04')
@@ -95,13 +108,14 @@ try:
 
 
 
+
     # 6. Check the distance between the vehicles and the construction zone
     while True:
         world_snapshot = world.get_snapshot()
         timestamp = world_snapshot.timestamp.elapsed_seconds # Get the time reference
 
         # Set the detection range 
-        detection_range = 10
+        detection_range = 25
 
         # Calculate the distance between each vehicle and each cone
         for i in range(len(vehicle_list)):
@@ -117,10 +131,22 @@ try:
                 # Calculate the Euclidean distance
                 dist = np.sqrt(np.square(v_x-c_x) + np.square(v_y-c_y))
 
+
                 # If the vehicle is in the range, assume RSU could send this message to the vehicle.
                 if dist < detection_range:
-                    print("Timestamp:{%.3f s}. Vehicle %d is close to the construction zone. Slow down." % (timestamp, i+1))
+                    if vehicle != veh_construction:
+                        tm.vehicle_percentage_speed_difference(vehicle, 60)
+                        tm.auto_lane_change(vehicle, True)
+                        curr_heading = vehicle.get_transform().rotation.yaw
+                        print(f"heading: {curr_heading}")
+                        if veh_construction_heading - curr_heading < 5:
+                            tm.force_lane_change(vehicle, False) # Force the vehicle to change lane
+                            print("forcing lane change")
+                        print("Timestamp:{%.3f s}. Vehicle %d is close to the construction zone. Slow down." % (timestamp, i+1))
                     break
+                else:
+                    if vehicle != veh_construction:
+                        tm.vehicle_percentage_speed_difference(vehicle, 0)
 
         time.sleep(0.2)
 
@@ -130,4 +156,9 @@ except KeyboardInterrupt:
     destroy()
 
 finally:
+    for actor in actor_list:
+        actor.destroy()
+    for vehicle in vehicle_list:
+        vehicle.destroy()
     print('done.')
+
