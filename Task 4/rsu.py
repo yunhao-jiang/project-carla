@@ -16,7 +16,7 @@ import time
 import numpy as np
 import math
 
-NPC_VEH_NUM = 80
+NPC_VEH_NUM = 100
 actor_list = []
 vehicle_list = []
 
