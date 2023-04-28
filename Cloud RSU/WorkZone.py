@@ -1,18 +1,18 @@
 class WorkZone:
-    def __init__(self, cone_list, cone_coords, vehicle_list, rsu_status, range_cone, range_rsu):
+    def __init__(self, cone_list, cone_coords, vehicle_list, rsu, range_cone, range_rsu):
         """cone_list: list of construction cones instances constructed by carla. The cone 0
                       should specify the yaw of street heading, the last two cones is for detection
                       of left or right lane. The minimum number of cones is 3.
            cone_coord: list of coordinates of the construction cones
            vehicle_list: dictionary of vehicles that passed through the work zone,
            key: vehicle_id, value: vehicle_id
-           rsu_status: status of the virtual RSU, True if created, False if not
+           rsu: RSU instance, None if no RSU is deployed
            range_cone: communication range of the construction cones
            range_rsu: communication range of the virtual RSU"""
         self.cone_list = cone_list
         self.cone_coords = cone_coords
         self.vehicle_list = vehicle_list
-        self.rsu_status = rsu_status
+        self.rsu = rsu
         self.range_cone = range_cone
         self.range_rsu = range_rsu
 
@@ -36,6 +36,24 @@ class WorkZone:
         """Set the cone_list"""
         self.cone_list = cone_list
 
-    def set_rsu_status(self, rsu_status):
-        """Set the rsu_status"""
-        self.rsu_status = rsu_status
+    def set_rsu(self, rsu):
+        """Set the rsu"""
+        self.rsu = rsu
+
+    def get_rsu_status(self):
+        """Get the status of the RSU"""
+        return True if self.rsu != None else False
+
+    def clear_rsu(self):
+        """Clear the RSU"""
+        self.rsu = None
+
+    def get_mean_location(self):
+        """Get the mean location of the work zone"""
+        x = 0
+        y = 0
+        for cone in self.cone_coords:
+            x += cone[0]
+            y += cone[1]
+        return [x/len(self.cone_coords), y/len(self.cone_coords)]
+

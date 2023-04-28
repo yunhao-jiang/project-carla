@@ -151,7 +151,8 @@ try:
                 corner_1 = carla.Location(x=rsu1.get_location().x, y=cone_1.get_location().y) + carla.Location(x=0, y=-DETECTION_RANGE, z=h_detect)
                 corner_2 = cone_2.get_location() + carla.Location(x=DETECTION_RANGE, y=-DETECTION_RANGE, z=h_detect)
                 corner_3 = cone_4.get_location() + carla.Location(x=DETECTION_RANGE, y=DETECTION_RANGE, z=h_detect)
-                corner_4 = carla.Location(x=rsu1.get_location().x, y=cone_5.get_location().y) + carla.Location(x=0, y=DETECTION_RANGE, z=h_detect)
+                corner_4 = carla.Location(x=rsu1.get_location().x, y=cone_5.get_location().y) + \
+                           carla.Location(x=0, y=DETECTION_RANGE, z=h_detect)
                 # Draw 4 boundaries
                 world.debug.draw_line(begin=corner_1, end=corner_2, thickness=0.03, color=carla.Color(255, 255, 0), life_time=max_time)
                 world.debug.draw_line(begin=corner_2, end=corner_3, thickness=0.03, color=carla.Color(255, 255, 0), life_time=max_time)
