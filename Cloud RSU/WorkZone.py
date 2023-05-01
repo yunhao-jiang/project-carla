@@ -20,7 +20,7 @@ class WorkZone:
         """Add a car to the vehicle_list"""
         self.vehicle_list[car_id] = car_id
 
-    def clear_all_car(self):
+    def clear_all_cars(self):
         """Clear all cars from the vehicle_list"""
         self.vehicle_list.clear()
 
@@ -30,6 +30,8 @@ class WorkZone:
 
     def clear_cone_list(self):
         """Clear all cones from the cone_list"""
+        for cone in self.cone_list:
+            cone.destroy()
         self.cone_list.clear()
 
     def set_cone_list(self, cone_list):
@@ -46,6 +48,7 @@ class WorkZone:
 
     def clear_rsu(self):
         """Clear the RSU"""
+        self.rsu.destroy()
         self.rsu = None
 
     def get_mean_location(self):
@@ -57,3 +60,6 @@ class WorkZone:
             y += cone[1]
         return [x/len(self.cone_coords), y/len(self.cone_coords)]
 
+    def get_heading(self):
+        """Get the heading of the work zone"""
+        return self.cone_coords[0][2]
